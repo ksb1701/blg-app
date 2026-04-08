@@ -26,7 +26,7 @@ export default function Navbar() {
 
   return (
     // 1. Added relative, bg-white, and z-50 so the nav sits above the rest of the page
-    <nav className="relative bg-white z-50">
+    <nav className="relative z-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo Section */}
@@ -91,7 +91,7 @@ export default function Navbar() {
 
       {/* 3. Mobile Menu Dropdown: Changed to absolute positioning */}
       {isOpen && (
-        <div className="absolute top-full left-0 w-full bg-white border-b-slate-400 rounded-b-xl z-50 md:hidden pb-4 pt-2">
+        <div className="absolute top-full left-0 w-full bg-white border-white rounded-b-xl z-50 md:hidden pb-4 pt-2">
           <div className="flex flex-col px-4 space-y-1">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;

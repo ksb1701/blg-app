@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   const featuredArticles = [
@@ -26,36 +27,33 @@ export default function Home() {
 
   return (
     <div>
-      
-      {/* Main container matching the Navbar's max-width and padding */}
-      <main className="max-w-6xl text-center mx-auto px-4 sm:px-6 lg:px-8 py-0.5 sm:py-6 flex flex-col space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col space-y-10">
         
         {/* Header Section */}
-        <div className="space-y-4 max-w-2xl">
+        <div className="space-y-4 max-w-2xl text-center mx-auto sm:text-left sm:mx-0">
           <h1 className="text-4xl font-extrabold tracking-tight text-teal-600">
             Welcome to my blog!
           </h1>
-          <p className="text-lg text-slate-600">
+          <p className="text-lg text-slate-600 leading-relaxed">
             I have made this website to keep track of things that I found interesting. Hope you also enjoy the stuff that I have written! Here are a few featured articles to start with:
           </p>
         </div>
 
-        {/* Responsive Grid: 1 column on mobile, 2 on sm screens and up */}
+        {/* Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
           {featuredArticles.map((article, index) => (
-            // The key prop is required by React for mapped elements
             <div 
               key={index} 
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col hover:cursor-pointer"
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-colors hover:border-teal-500 hover:shadow-sm hover:cursor-pointer group"
             >
-              {/* Image / Banner Container */}
-              <div className="h-48 bg-slate-200 flex items-center justify-center text-slate-500">
+              <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400 font-medium group-hover:bg-slate-200 transition-colors">
                 {article.banner}
               </div>
               
-              {/* Text Content Container */}
               <div className="p-6 flex flex-col">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">{article.name}</h2>
+                <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
+                  {article.name}
+                </h2>
                 <p className="text-slate-600">{article.description}</p>
               </div>
             </div>
@@ -63,10 +61,12 @@ export default function Home() {
         </div>
 
         {/* Button Wrapper */}
-        <div>
-          <Button size="lg">
-            More Articles &gt;
-          </Button>
+        <div className="flex justify-center sm:justify-start">
+          <Link href="/articles">
+            <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white transition-colors">
+              More Articles &gt;
+            </Button>
+          </Link>
         </div>
 
       </main>
