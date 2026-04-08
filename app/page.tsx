@@ -1,29 +1,14 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Article from "@/models/Article"; // Adjust import path as needed
+import dbConnect from "@/lib/mongodb"; // You will need a standard Mongoose connection utility
 
-export default function Home() {
-  const featuredArticles = [
-    {
-      name: 'A',
-      banner: 'Banner Placeholder A',
-      description: 'Article for grid 1'
-    },
-    {
-      name: 'B',
-      banner: 'Banner Placeholder B',
-      description: 'Article for grid 2'
-    },
-    {
-      name: 'C',
-      banner: 'Banner Placeholder C',
-      description: 'Article for grid 3'
-    },
-    {
-      name: 'D',
-      banner: 'Banner Placeholder D',
-      description: 'Article for grid 4'
-    }
-  ];
+export default async function Home() {
+  // Ensure the database is connected before querying
+  await dbConnect(); 
+
+  // Fetch only featured articles and convert them to plain JS objects
+  const featuredArticles = await Article.find({ featured: true }).lean();
 
   return (
     <div>
@@ -43,7 +28,7 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
           {featuredArticles.map((article, index) => (
             <div 
-              key={index} 
+              key={article._id?.toString() || index} // Better to use _id for React keys
               className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col transition-colors hover:border-teal-500 hover:shadow-sm hover:cursor-pointer group"
             >
               <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400 font-medium group-hover:bg-slate-200 transition-colors">
@@ -52,7 +37,7 @@ export default function Home() {
               
               <div className="p-6 flex flex-col">
                 <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
-                  {article.name}
+                  {article.title} {/* Changed from article.name to match schema */}
                 </h2>
                 <p className="text-slate-600">{article.description}</p>
               </div>
