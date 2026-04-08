@@ -5,10 +5,10 @@ import {
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious
 } from "@/components/ui/pagination";
+import { buttonVariants } from "@/components/ui/button"; // Added standard shadcn button styles
+import { cn } from "@/lib/utils"; // Added standard shadcn utility
+import { ChevronLeft, ChevronRight } from "lucide-react"; // Added standard shadcn icons
 import Link from "next/link";
 import Article from "@/models/Article";
 import dbConnect from "@/lib/mongodb";
@@ -16,21 +16,21 @@ import dbConnect from "@/lib/mongodb";
 export default async function Articles({
   searchParams,
 }: {
-  searchParams: { query?: string; page?: string };
+  searchParams: Promise<{ query?: string; page?: string }>; 
 }) {
   await dbConnect();
 
-  // 1. Setup Pagination & Search Variables
-  const currentPage = Number(searchParams?.page) || 1;
-  const limit = 6; // Articles per page
-  const skip = (currentPage - 1) * limit;
-  const query = searchParams?.query || "";
+  const resolvedParams = await searchParams; 
 
-  // 2. Build MongoDB Query
-  // Searches for titles containing the query string (case-insensitive)
+  const currentPage = Number(resolvedParams?.page) || 1;
+  const limit = 6; 
+  const skip = (currentPage - 1) * limit;
+  const query = resolvedParams?.query || "";
+
+  // MongoDB Query
   const dbQuery = query ? { title: { $regex: query, $options: "i" } } : {};
 
-  // 3. Fetch Data & Total Count Concurrently
+  // Concurrent fetching
   const [articles, totalCount] = await Promise.all([
     Article.find(dbQuery).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     Article.countDocuments(dbQuery),
@@ -38,13 +38,22 @@ export default async function Articles({
 
   const totalPages = Math.ceil(totalCount / limit);
 
-  // Helper to generate pagination URLs keeping the search query intact
   const createPageURL = (pageNumber: number) => {
     const params = new URLSearchParams();
     if (query) params.set("query", query);
     params.set("page", pageNumber.toString());
     return `?${params.toString()}`;
   };
+
+  const getVisiblePages = () => {
+    const delta = 2; 
+    const range = [];
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      range.push(i);
+    }
+    return range;
+  };
+  const visiblePages = getVisiblePages();
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col space-y-10">
@@ -56,7 +65,6 @@ export default async function Articles({
           <p className="text-lg text-slate-600">Browse through my thoughts and writings.</p>
         </div>
         
-        {/* Native form updates the URL to ?query=value automatically */}
         <form method="GET" action="/articles" className="w-full md:w-72">
           <Field>
             <FieldLabel className="sr-only">Search your articles</FieldLabel>
@@ -80,6 +88,7 @@ export default async function Articles({
             <Link 
               href={`/articles/${article.slug}`} 
               key={article._id?.toString()}
+              prefetch={false}
               className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col hover:border-teal-500 hover:shadow-sm transition-colors cursor-pointer group"
             >
               <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
@@ -96,33 +105,96 @@ export default async function Articles({
         <div className="pt-8 border-t border-slate-200">
           <Pagination>
             <PaginationContent>
+              
+              {/* Previous Button */}
               {currentPage > 1 && (
                 <PaginationItem>
-                  <PaginationPrevious href={createPageURL(currentPage - 1)} className="hover:text-teal-600" />
+                  <Link 
+                    href={createPageURL(currentPage - 1)} 
+                    prefetch={false} 
+                    scroll={false}
+                    className={cn(buttonVariants({ variant: "ghost" }), "gap-1 pl-2.5 hover:text-teal-600")}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Previous</span>
+                  </Link>
                 </PaginationItem>
               )}
               
-              {/* Render simple page numbers (expand logic if dealing with dozens of pages) */}
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink 
-                      href={createPageURL(pageNum)} 
-                      isActive={currentPage === pageNum}
-                      className={currentPage === pageNum ? "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none" : ""}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
+              {/* First Page Always Visible */}
+              <PaginationItem>
+                <Link 
+                  href={createPageURL(1)} 
+                  prefetch={false} 
+                  scroll={false}
+                  className={cn(
+                    buttonVariants({ variant: currentPage === 1 ? "outline" : "ghost", size: "icon" }),
+                    currentPage === 1 && "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none"
+                  )}
+                >
+                  1
+                </Link>
+              </PaginationItem>
 
-              {currentPage < totalPages && (
+              {/* Left Ellipsis */}
+              {visiblePages[0] > 2 && (
+                <PaginationItem><PaginationEllipsis /></PaginationItem>
+              )}
+
+              {/* Dynamic Middle Pages */}
+              {visiblePages.map((pageNum) => (
+                <PaginationItem key={pageNum}>
+                  <Link 
+                    href={createPageURL(pageNum)} 
+                    prefetch={false} 
+                    scroll={false}
+                    className={cn(
+                      buttonVariants({ variant: currentPage === pageNum ? "outline" : "ghost", size: "icon" }),
+                      currentPage === pageNum && "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none"
+                    )}
+                  >
+                    {pageNum}
+                  </Link>
+                </PaginationItem>
+              ))}
+
+              {/* Right Ellipsis */}
+              {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
+                <PaginationItem><PaginationEllipsis /></PaginationItem>
+              )}
+
+              {/* Last Page Always Visible */}
+              {totalPages > 1 && (
                 <PaginationItem>
-                  <PaginationNext href={createPageURL(currentPage + 1)} className="hover:text-teal-600" />
+                  <Link 
+                    href={createPageURL(totalPages)} 
+                    prefetch={false} 
+                    scroll={false}
+                    className={cn(
+                      buttonVariants({ variant: currentPage === totalPages ? "outline" : "ghost", size: "icon" }),
+                      currentPage === totalPages && "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none"
+                    )}
+                  >
+                    {totalPages}
+                  </Link>
                 </PaginationItem>
               )}
+
+              {/* Next Button */}
+              {currentPage < totalPages && (
+                <PaginationItem>
+                  <Link 
+                    href={createPageURL(currentPage + 1)} 
+                    prefetch={false} 
+                    scroll={false}
+                    className={cn(buttonVariants({ variant: "ghost" }), "gap-1 pr-2.5 hover:text-teal-600")}
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </PaginationItem>
+              )}
+
             </PaginationContent>
           </Pagination>
         </div>
