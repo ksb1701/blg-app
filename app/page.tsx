@@ -42,21 +42,22 @@ export default async function Home() {
         {/* Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
           {featuredArticles.map((article, index) => (
-            <div
-              key={article._id?.toString() || index} // Better to use _id for React keys
-              className="rounded-xl border border-slate-300 overflow-hidden flex flex-col hover:border-teal-500 hover:cursor-pointer group"
+            <Link
+              href={`/articles/${article.slug}`}
+              key={article._id?.toString() || index} 
+              className="rounded-xl border border-slate-300 overflow-hidden flex flex-col hover:border-teal-500 hover:cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 transition-colors"
             >
-              <div className="w-full aspect-video bg-slate-100 flex items-center justify-center text-slate-400 font-medium group-hover:bg-slate-200">
+              <div className="w-full aspect-video bg-slate-100 flex items-center justify-center text-slate-400 font-medium group-hover:bg-slate-200 transition-colors">
                 {article.banner}
               </div>
 
               <div className="p-6 flex flex-col">
-                <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600">
-                  {article.title} {/* Changed from article.name to match schema */}
+                <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
+                  {article.title}
                 </h2>
                 <p className="text-slate-600">{article.description}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
