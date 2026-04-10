@@ -26,7 +26,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
       <header className="mb-10 pb-6 border-b border-slate-200">
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 mb-4">
+        <h1 className="text-4xl sm:text-5xl font-extrabold bg-white tracking-tight text-teal-600 mb-4">
           {article.title}
         </h1>
         <p className="text-lg text-slate-500">

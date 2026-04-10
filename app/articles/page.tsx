@@ -56,13 +56,13 @@ export default async function Articles({
   const visiblePages = getVisiblePages();
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col space-y-10">
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col space-y-10">
       
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-4xl font-extrabold tracking-tight text-teal-600">All Articles</h1>
-          <p className="text-lg text-slate-600">Browse through my thoughts and writings.</p>
+          <p className="text-md text-slate-600">Browse through my thoughts and writings.</p>
         </div>
         
         <form method="GET" action="/articles" className="w-full md:w-72">
@@ -72,29 +72,39 @@ export default async function Articles({
               type="text" 
               name="query"
               defaultValue={query}
-              placeholder="Search articles..." 
+              placeholder="Search Articles" 
               className="border-slate-300 focus-visible:ring-teal-600"
             />
           </Field>
         </form>
       </div>
 
-      {/* Articles List / Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Articles List */}
+      <div className="flex flex-col">
         {articles.length === 0 ? (
-          <p className="text-slate-500">No articles found.</p>
+          <p className="text-slate-500 py-10 text-center text-lg">No articles found.</p>
         ) : (
           articles.map((article) => (
             <Link 
               href={`/articles/${article.slug}`} 
               key={article._id?.toString()}
               prefetch={false}
-              className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col hover:border-teal-500 hover:shadow-sm transition-colors cursor-pointer group"
+              className="group py-8 border-b border-slate-200 last:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-4 rounded-sm"
             >
-              <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-teal-600 transition-colors">
                 {article.title}
               </h2>
-              <p className="text-slate-600">{article.description}</p>
+              
+              <p className="text-slate-600 text-lg leading-relaxed mb-4 line-clamp-3">
+                {article.description}
+              </p>
+              
+              <div className="flex items-center text-teal-600 font-semibold text-sm">
+                Read article 
+                <span aria-hidden="true" className="ml-2 transition-transform duration-100 group-hover:translate-x-1.5">
+                  &rarr;
+                </span>
+              </div>
             </Link>
           ))
         )}
