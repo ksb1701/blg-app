@@ -3,63 +3,54 @@ import Article from "@/models/Article";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 
-// Next.js 15 requires params to be treated as a Promise
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  // 1. Await the params to extract the slug
   const { slug } = await params;
-
-  // 2. Connect to the database
   await connectToDatabase();
-
-  // 3. Fetch the article
   const article = await Article.findOne({ slug: slug }).lean();
 
-  // 4. Trigger Next.js's built-in 404 page if it doesn't exist
   if (!article) {
     notFound();
   }
 
-  // 5. Render the page
   return (
-    <main className="mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    // Removed the horizontal padding from the main wrapper to allow the header to expand
+    <main className="w-full pb-16">
       
-      {/* Header Container */}
-      <header className="relative mb-10">
+      {/* 1. Header Container: Expanded width, distinct from the reading column */}
+      <header className="relative w-full max-w-7xl mx-auto mb-12 sm:mb-16 border-b border-slate-200">
         
-        {/* Image Container:
-            Maintains aspect ratios and acts as the positioning context for the text on larger screens.
-        */}
-        <div className="max-w-8xl relative w-full overflow-hidden rounded-2xl bg-slate-200 aspect-3/2 sm:aspect-2/1 lg:aspect-3/1 border border-slate-200 z-0">
-          {/* FUTURE VERCEL BLOB IMAGE:
-              <Image src={article.coverImage} alt="Cover" fill className="object-cover" />
-          */}
+        {/* 2. Image Container: Sharp edges, wider aspect ratio */}
+        <div className="relative w-full bg-slate-100 aspect-video sm:aspect-21/9 z-0">
+          {article.banner && (
+            <Image 
+              src={article.banner} 
+              alt={article.title} 
+              fill 
+              priority 
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              className="object-cover" 
+            />
+          )}
         </div>
 
-        {/* Text Container:
-            Mobile: Flows naturally below the image (mt-6).
-            Tablet/Desktop: Absolute positioned over the bottom-left of the image (sm:absolute).
-        */}
-        <div className="max-w-4xl relative z-10 mt-6 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:p-8 pointer-events-none">
-          
-          {/* Wrapped in divs to ensure the inline-blocks stack vertically */}
-          <div className="pointer-events-auto">
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-teal-600 mb-3 sm:mb-2 sm:bg-white sm:inline-block sm:px-2 sm:py-1 sm:-ml-2 sm:rounded">
+        {/* 3. Text Container: Solid white block, anchored to bottom-left */}
+        <div className="relative z-10 w-full px-4 sm:px-0 sm:absolute sm:bottom-0 sm:left-0 sm:max-w-2xl md:max-w-3xl">
+          {/* Solid background padding overriding the image */}
+          <div className="bg-white pt-6 sm:p-6 md:p-8 lg:pr-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-4">
               {article.title}
             </h1>
-          </div>
-          
-          <div className="pointer-events-auto">
-            <p className="text-lg text-slate-700 sm:bg-white/90 sm:inline-block sm:px-2 sm:py-1 sm:-ml-2 sm:rounded">
+            <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed">
               {article.description}
             </p>
           </div>
-
         </div>
       </header>
       
-      {/* Markdown Content rendered as HTML */}
-      <article className="prose prose-lg prose-slate max-w-3xl prose-a:text-teal-600 hover:prose-a:text-teal-700 prose-headings:tracking-tight prose-img:rounded-xl">
+      {/* 4. Reading Column: Centered, narrow, and easy to read */}
+      <article className="prose prose-lg md:prose-xl prose-slate mx-auto px-4 sm:px-6 max-w-3xl prose-a:text-teal-600 hover:prose-a:text-teal-700 prose-headings:tracking-tight prose-img:rounded-xl">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {article.content}
         </ReactMarkdown>
