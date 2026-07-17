@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import Form from "next/form";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,20 +15,12 @@ import Link from "next/link";
 import Article from "@/models/Article";
 import dbConnect from "@/lib/mongodb";
 
-export default async function Articles({
-  searchParams,
-}: {
-  searchParams: Promise<{ query?: string; page?: string }>; 
-}) {
+async function ArticleList({ query, currentPage }: { query: string; currentPage: number }) {
   await dbConnect();
-
-  const resolvedParams = await searchParams; 
-
-  const currentPage = Number(resolvedParams?.page) || 1;
-  const limit = 6; 
+  
+  const limit = 6;
   const skip = (currentPage - 1) * limit;
-  const query = resolvedParams?.query || "";
-
+  
   // MongoDB Query
   const dbQuery = query ? { title: { $regex: query, $options: "i" } } : {};
 
@@ -56,29 +50,7 @@ export default async function Articles({
   const visiblePages = getVisiblePages();
 
   return (
-    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col space-y-10">
-      
-      {/* Header & Search */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight text-teal-600">All Articles</h1>
-          <p className="text-md text-slate-600">Browse through my thoughts and writings.</p>
-        </div>
-        
-        <form method="GET" action="/articles" className="w-full md:w-72">
-          <Field>
-            <FieldLabel className="sr-only">Search your articles</FieldLabel>
-            <Input 
-              type="text" 
-              name="query"
-              defaultValue={query}
-              placeholder="Search Articles" 
-              className="border-slate-300 focus-visible:ring-teal-600"
-            />
-          </Field>
-        </form>
-      </div>
-
+    <>
       {/* Articles List */}
       <div className="flex flex-col">
         {articles.length === 0 ? (
@@ -88,7 +60,6 @@ export default async function Articles({
             <Link 
               href={`/articles/${article.slug}`} 
               key={article._id?.toString()}
-              prefetch={false}
               className="group py-8 border-b border-slate-200 last:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-4 rounded-sm"
             >
               <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-teal-600 transition-colors">
@@ -121,8 +92,6 @@ export default async function Articles({
                 <PaginationItem>
                   <Link 
                     href={createPageURL(currentPage - 1)} 
-                    prefetch={false} 
-                    scroll={false}
                     className={cn(buttonVariants({ variant: "ghost" }), "gap-1 pl-2.5 hover:text-teal-600")}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -135,8 +104,6 @@ export default async function Articles({
               <PaginationItem>
                 <Link 
                   href={createPageURL(1)} 
-                  prefetch={false} 
-                  scroll={false}
                   className={cn(
                     buttonVariants({ variant: currentPage === 1 ? "outline" : "ghost", size: "icon" }),
                     currentPage === 1 && "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none"
@@ -156,8 +123,6 @@ export default async function Articles({
                 <PaginationItem key={pageNum}>
                   <Link 
                     href={createPageURL(pageNum)} 
-                    prefetch={false} 
-                    scroll={false}
                     className={cn(
                       buttonVariants({ variant: currentPage === pageNum ? "outline" : "ghost", size: "icon" }),
                       currentPage === pageNum && "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none"
@@ -178,8 +143,6 @@ export default async function Articles({
                 <PaginationItem>
                   <Link 
                     href={createPageURL(totalPages)} 
-                    prefetch={false} 
-                    scroll={false}
                     className={cn(
                       buttonVariants({ variant: currentPage === totalPages ? "outline" : "ghost", size: "icon" }),
                       currentPage === totalPages && "bg-teal-50 text-teal-700 hover:bg-teal-100 border-none"
@@ -195,8 +158,6 @@ export default async function Articles({
                 <PaginationItem>
                   <Link 
                     href={createPageURL(currentPage + 1)} 
-                    prefetch={false} 
-                    scroll={false}
                     className={cn(buttonVariants({ variant: "ghost" }), "gap-1 pr-2.5 hover:text-teal-600")}
                   >
                     <span>Next</span>
@@ -209,6 +170,62 @@ export default async function Articles({
           </Pagination>
         </div>
       )}
+    </>
+  );
+}
+
+function ArticleListSkeleton() {
+  return (
+    <div className="flex flex-col space-y-8 animate-pulse mt-8">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="py-8 border-b border-slate-200 last:border-none">
+          <div className="h-8 bg-slate-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-slate-200 rounded w-full mb-2"></div>
+          <div className="h-4 bg-slate-200 rounded w-5/6 mb-4"></div>
+          <div className="h-4 bg-slate-200 rounded w-24"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default async function Articles({
+  searchParams,
+}: {
+  searchParams: Promise<{ query?: string; page?: string }>; 
+}) {
+  const resolvedParams = await searchParams; 
+
+  const currentPage = Number(resolvedParams?.page) || 1;
+  const query = resolvedParams?.query || "";
+
+  return (
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col space-y-10">
+      
+      {/* Header & Search */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold tracking-tight text-teal-600">All Articles</h1>
+          <p className="text-md text-slate-600">Browse through my thoughts and writings.</p>
+        </div>
+        
+        <Form action="/articles" className="w-full md:w-72">
+          <Field>
+            <FieldLabel className="sr-only">Search your articles</FieldLabel>
+            <Input 
+              type="text" 
+              name="query"
+              defaultValue={query}
+              placeholder="Search Articles" 
+              className="border-slate-300 focus-visible:ring-teal-600"
+            />
+          </Field>
+        </Form>
+      </div>
+
+      <Suspense fallback={<ArticleListSkeleton />} key={query + currentPage}>
+        <ArticleList query={query} currentPage={currentPage} />
+      </Suspense>
     </main>
   );
 }

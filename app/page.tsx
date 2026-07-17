@@ -1,14 +1,67 @@
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image"; // 1. Import the Image component
 import Article from "@/models/Article"; 
 import dbConnect from "@/lib/mongodb"; 
 
-export default async function Home() {
+async function FeaturedArticles() {
   await dbConnect();
-
   const featuredArticles = await Article.find({ featured: true }).lean();
 
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+      {featuredArticles.map((article, index) => (
+        <Link
+          href={`/articles/${article.slug}`}
+          key={article._id?.toString() || index} 
+          className="rounded-xl border border-slate-300 overflow-hidden flex flex-col hover:border-teal-500 hover:cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 transition-colors"
+        >
+          {/* 2. Make this container relative, and render the Image component inside */}
+          <div className="relative w-full aspect-video bg-slate-100 flex items-center justify-center text-slate-400 font-medium group-hover:bg-slate-200 transition-colors overflow-hidden">
+            {article.banner ? (
+              <Image 
+                src={article.banner} 
+                alt={article.title} 
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105" 
+              />
+            ) : (
+              <span>No Image Available</span> // Fallback if the database has no URL
+            )}
+          </div>
+
+          <div className="p-6 flex flex-col">
+            <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
+              {article.title}
+            </h2>
+            <p className="text-slate-600">{article.description}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function FeaturedArticlesSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="rounded-xl border border-slate-300 overflow-hidden flex flex-col">
+          <div className="w-full aspect-video bg-slate-200"></div>
+          <div className="p-6 flex flex-col">
+            <div className="h-6 bg-slate-200 rounded w-3/4 mb-3"></div>
+            <div className="h-4 bg-slate-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function Home() {
   return (
     <div>
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col space-y-10">
@@ -37,37 +90,9 @@ export default async function Home() {
         </div>
 
         {/* Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-          {featuredArticles.map((article, index) => (
-            <Link
-              href={`/articles/${article.slug}`}
-              key={article._id?.toString() || index} 
-              className="rounded-xl border border-slate-300 overflow-hidden flex flex-col hover:border-teal-500 hover:cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 transition-colors"
-            >
-              {/* 2. Make this container relative, and render the Image component inside */}
-              <div className="relative w-full aspect-video bg-slate-100 flex items-center justify-center text-slate-400 font-medium group-hover:bg-slate-200 transition-colors overflow-hidden">
-                {article.banner ? (
-                  <Image 
-                    src={article.banner} 
-                    alt={article.title} 
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105" 
-                  />
-                ) : (
-                  <span>No Image Available</span> // Fallback if the database has no URL
-                )}
-              </div>
-
-              <div className="p-6 flex flex-col">
-                <h2 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
-                  {article.title}
-                </h2>
-                <p className="text-slate-600">{article.description}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <Suspense fallback={<FeaturedArticlesSkeleton />}>
+          <FeaturedArticles />
+        </Suspense>
 
         {/* Button Wrapper */}
         <div className="flex justify-center">
